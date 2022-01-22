@@ -45,7 +45,7 @@ public class ZipUtil {
     }
 
     /**
-     * 压缩文件
+     * 压缩文件，打包apk
      */
     public static void zip(File src, File dst) throws Exception {
         dst.delete();
@@ -78,7 +78,7 @@ public class ZipUtil {
 
     private static void compressFile(File file, ZipOutputStream zos, String dir) throws Exception {
         String dirName = dir + file.getName();
-        String[] dirNameNew = dirName.split(File.separator);
+        String[] dirNameNew = dirName.split("\\\\");
         StringBuffer buffer = new StringBuffer();
 
         if (dirNameNew.length > 1) {
@@ -92,6 +92,14 @@ public class ZipUtil {
         }
 
         ZipEntry entry = new ZipEntry(buffer.toString().substring(1));
+
+        // 适配Android 11，在Android 11上，resources.arsc不要压缩，并且要进行4字节对齐
+        if ("resources.arsc".equals(file.getName())) {
+            entry.setMethod(ZipEntry.STORED);
+            entry.setSize(file.length());
+            entry.setCrc(calFileCRC32(file));
+        }
+
         zos.putNextEntry(entry);
         BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
         int count;
@@ -101,6 +109,15 @@ public class ZipUtil {
         }
         bis.close();
         zos.closeEntry();
+    }
+
+    private static long calFileCRC32(File file) throws IOException {
+        FileInputStream fi = new FileInputStream(file);
+        CheckedInputStream checksum = new CheckedInputStream(fi, new CRC32());
+        long temp = checksum.getChecksum().getValue();
+        fi.close();
+        checksum.close();
+        return temp;
     }
 
 }

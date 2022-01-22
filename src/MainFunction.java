@@ -67,7 +67,7 @@ public class MainFunction {
 
         // 使用原来的签名文件进行签名
         File signedApk = new File("result/apk-signed.apk");
-        SignatureUtil.signature(unsignedApk, signedApk);
+        SignatureUtil.v2Signature(unsignedApk, signedApk, "key.keystore", "123456", "key0", "123456");
 
     }
 
